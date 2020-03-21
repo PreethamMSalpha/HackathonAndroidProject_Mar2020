@@ -23,6 +23,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -68,6 +69,17 @@ public class LoginActivity extends AppCompatActivity {
                 showRecoverPasswordDialog();
             }
         });
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        //if user already logged in
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser != null){
+            SendUserToMainActivity();
+        }
+
     }
 
     private void AllowingUserToLogin() {
