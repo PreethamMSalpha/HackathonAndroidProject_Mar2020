@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,6 +41,8 @@ public class MainActivity extends AppCompatActivity {
 
     private CircleImageView NavProfileImage;
     private TextView NavProfileUserName;
+    private ImageButton AddNewPostButton;
+
     private FirebaseAuth mAuth;
     private DatabaseReference UsersRef;
 
@@ -59,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(mToolbar);
         getSupportActionBar().setTitle("Home");
 
+        AddNewPostButton = (ImageButton)findViewById(R.id.add_new_post_button);
         drawerLayout = (DrawerLayout)findViewById(R.id.drawable_layout);
         actionBarDrawerToggle = new ActionBarDrawerToggle(MainActivity.this, drawerLayout, R.string.drawer_open,R.string.drawer_close);
         drawerLayout.addDrawerListener(actionBarDrawerToggle);
@@ -73,21 +77,17 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()){
-                    Map<String, Object> map = (Map<String, Object>)dataSnapshot.getValue();
+                    if (dataSnapshot.hasChild("Fullname")){
+                        String fullname = dataSnapshot.child(("Fullname")).getValue().toString();
+                        NavProfileUserName.setText(fullname);
+                    }
+                    if (dataSnapshot.hasChild("ProfileImages")){
+                        String image = dataSnapshot.child(("ProfileImages")).getValue().toString();
+                        Picasso.get().load(image).placeholder(R.drawable.profile).into(NavProfileImage);
+                    }else{
+                        Toast.makeText(MainActivity.this, "Profile name doesn't exsist", Toast.LENGTH_SHORT).show();
+                    }
 
-//                    if (map.get("profileImageUrl") != null){
-//                        String profileImageUrl = map.get("ProfileImages").toString();
-//                        switch (profileImageUrl){
-//                            case "default": Glide.with(getApplication()).load(R.drawable.profile).into(NavProfileImage);  break;
-//                            default: Glide.with(getApplication()).load(profileImageUrl).into(NavProfileImage); break;
-//                        }
-//
-//                    }
-                    String fullname = dataSnapshot.child(("Fullname")).getValue().toString();
-                    String image = dataSnapshot.child(("ProfileImages")).getValue().toString();
-
-                    NavProfileUserName.setText(fullname);
-                    Picasso.get().load(image).placeholder(R.drawable.profile).into(NavProfileImage);
                 }
             }
 
@@ -104,6 +104,19 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             }
         });
+
+        AddNewPostButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SendUserToPostActivity();
+            }
+        });
+
+    }
+
+    private void SendUserToPostActivity() {
+        Intent addNewPostIntent = new Intent(MainActivity.this, PostActivity.class);
+        startActivity(addNewPostIntent);
     }
 
     @Override
@@ -137,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void SendUserToSetupActivity() {
-        Intent setupIntent = new Intent(MainActivity.this, SetupActivity.class);
+        Intent setupIntent = new Intent(MainActivity.this, SetupActivityDemo.class);
         setupIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(setupIntent);
         finish();
@@ -161,6 +174,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void UserMenuSelector(MenuItem menuItem) {
         switch(menuItem.getItemId()){
+            case R.id.nav_post:
+                SendUserToPostActivity(); break;
             case R.id.nav_profile:
                 Toast.makeText(this, "profile", Toast.LENGTH_SHORT).show(); break;
             case R.id.nav_home:

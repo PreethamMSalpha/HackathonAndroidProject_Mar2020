@@ -29,7 +29,23 @@
                 android:id="@+id/all_users_post_list"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
+
         </FrameLayout>
+
+        <ImageButton
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_alignParentEnd="true"
+            android:scaleType="centerCrop"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="4dp"
+            android:layout_marginRight="12dp"
+            android:background="@color/colorPrimaryDark"
+            android:src="@drawable/add_post_high"
+            android:baselineAlignBottom="false"
+            android:focusableInTouchMode="false"
+            android:id="@+id/add_new_post_button"/>
+
     </RelativeLayout>
 
     <com.google.android.material.navigation.NavigationView
