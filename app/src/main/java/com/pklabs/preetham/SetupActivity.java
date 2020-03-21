@@ -1,10 +1,12 @@
 package com.pklabs.preetham;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -17,6 +19,11 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+import com.theartofdev.edmodo.cropper.CropImage;
+import com.theartofdev.edmodo.cropper.CropImageView;
 
 import java.util.HashMap;
 
@@ -31,8 +38,10 @@ public class SetupActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
     private DatabaseReference UsersRef;
+    private StorageReference UserProfileImageRef;
 
     String currentUserId;
+    final static int Gallery_Pick = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,7 +51,7 @@ public class SetupActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         currentUserId = mAuth.getCurrentUser().getUid();
         UsersRef = FirebaseDatabase.getInstance().getReference().child("Users").child(currentUserId);
-
+        UserProfileImageRef = FirebaseStorage.getInstance().getReference().child("Profile Images");
 
         UserName = (EditText) findViewById(R.id.setup_username);
         FullName = (EditText) findViewById(R.id.setup_fullname);
@@ -57,6 +66,77 @@ public class SetupActivity extends AppCompatActivity {
                 SaveAccountSetupInfo();
             }
         });
+
+        ProfileImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent galleryIntent = new Intent();
+                galleryIntent.setAction(Intent.ACTION_GET_CONTENT);
+                galleryIntent.setType("image/*");
+                startActivityForResult(galleryIntent, Gallery_Pick);
+            }
+        });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == Gallery_Pick && resultCode == RESULT_OK && data!= null){
+            Uri ImageUri = data.getData();
+            //for cropping image after importing dependencies, manifest files
+            CropImage.activity()
+                    .setGuidelines(CropImageView.Guidelines.ON)
+                    .setAspectRatio(1,1)
+                    .start(this);
+        }
+        if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE){
+            CropImage.ActivityResult result = CropImage.getActivityResult(data);
+            
+            if (resultCode == RESULT_OK){
+
+                loadingBar.setTitle("Profile Image");
+                loadingBar.setMessage("Please wait, while we're updating your profile image...");
+                loadingBar.show();
+                loadingBar.setCanceledOnTouchOutside(true);
+
+                Uri resultUri = result.getUri();
+
+                StorageReference filepath = UserProfileImageRef.child(currentUserId +".jpg");
+                filepath.putFile(resultUri).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
+                       if (task.isSuccessful()){
+                           Toast.makeText(SetupActivity.this, "Profile Image stored to Database successfully", Toast.LENGTH_SHORT).show();
+                            //final String downloadUrl = task.getResult().getTask().toString(); //error might occur here 18.56_14
+                           final String downloadUrl = task.getResult().getMetadata().getReference().getDownloadUrl().toString();
+
+                           UsersRef.child("ProfileImages").setValue(downloadUrl)
+                                   .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                       @Override
+                                       public void onComplete(@NonNull Task<Void> task) {
+                                           if (task.isSuccessful()){
+                                               Intent selfIntent = new Intent(SetupActivity.this, SetupActivity.class);
+                                               startActivity(selfIntent);
+
+                                               Toast.makeText(SetupActivity.this, "Profile image stored to Database successfully!!!", Toast.LENGTH_SHORT).show();
+                                               loadingBar.dismiss();
+                                           }else{
+                                               String message = task.getException().getMessage();
+                                               Toast.makeText(SetupActivity.this, "Error occured "+message, Toast.LENGTH_SHORT).show();
+                                               loadingBar.dismiss();
+                                           }
+                                       }
+                                   });
+                       }
+                    }
+                });
+            }else{
+                Toast.makeText(this, "Image cropped failed, try again", Toast.LENGTH_SHORT).show();
+                loadingBar.dismiss();
+            }
+
+        }
     }
 
     private void SaveAccountSetupInfo() {
