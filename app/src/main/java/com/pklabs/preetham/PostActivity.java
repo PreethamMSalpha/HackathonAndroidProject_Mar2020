@@ -1,16 +1,29 @@
 package com.pklabs.preetham;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.Toast;
+
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 public class PostActivity extends AppCompatActivity {
 
@@ -21,10 +34,19 @@ public class PostActivity extends AppCompatActivity {
 
     private static final int Gallery_Pick = 1;
 
+    private Uri ImageUri;
+    private String Description;
+
+    private StorageReference PostsImagesRef;
+
+    private String saveCurrentDate, saveCurrentTime, postRandomName;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_post);
+
+        PostsImagesRef = FirebaseStorage.getInstance().getReference();
 
         SelectPostImage = (ImageButton)findViewById(R.id.select_post_image);
         UpdatePostButton = (Button) findViewById(R.id.update_post_button);
@@ -43,6 +65,51 @@ public class PostActivity extends AppCompatActivity {
             }
         });
 
+        UpdatePostButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ValidatePostInfo();
+            }
+        });
+
+    }
+
+    private void ValidatePostInfo() {
+        Description = PostDescription.getText().toString();
+        if (ImageUri == null){
+            Toast.makeText(this, "Image not selected", Toast.LENGTH_SHORT).show();
+        }else if (TextUtils.isEmpty(Description)){
+            Toast.makeText(this, "Description about post is needed", Toast.LENGTH_SHORT).show();
+        }else{
+            StoringImageToFirebaseStorage();
+        }
+    }
+
+    private void StoringImageToFirebaseStorage() {
+        Calendar calForDate = Calendar.getInstance();
+        SimpleDateFormat currentDate = new SimpleDateFormat("dd-MMMM-yyyy");
+        saveCurrentDate = currentDate.format(calForDate.getTime());
+
+        Calendar calForTime = Calendar.getInstance();
+        SimpleDateFormat currentTime = new SimpleDateFormat("HH:mm");
+        saveCurrentTime = currentDate.format(calForTime.getTime());
+
+        //same images with same names uploaded by the users wont be replaced
+        postRandomName = saveCurrentDate + saveCurrentTime;
+
+        StorageReference filePath = PostsImagesRef.child("Post Images").child(ImageUri.getLastPathSegment() + postRandomName + ".jpg");
+
+        filePath.putFile(ImageUri).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
+                if (task.isSuccessful()){
+                    Toast.makeText(PostActivity.this, "Image uploaded successfully to Storage", Toast.LENGTH_SHORT).show();
+                }else{
+                    String message = task.getException().getMessage();
+                    Toast.makeText(PostActivity.this, "Error occured: "+message, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
     private void OpenGallery() {
@@ -50,6 +117,17 @@ public class PostActivity extends AppCompatActivity {
         galleryIntent.setAction(Intent.ACTION_GET_CONTENT);
         galleryIntent.setType("image/*");
         startActivityForResult(galleryIntent, Gallery_Pick);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        //displaying selected image
+        if (requestCode == Gallery_Pick && resultCode == RESULT_OK && data!= null){
+            ImageUri = data.getData();
+            SelectPostImage.setImageURI(ImageUri);
+        }
     }
 
     @Override
