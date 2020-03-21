@@ -5,11 +5,49 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".PostActivity">
+    tools:context=".PostActivity"
+    android:background="@drawable/solid_profile">
 
     <include
         android:id="@+id/update_post_page_toolbar"
         layout="@layout/app_bar_layout"/>
+
+    <ImageButton
+        android:id="@+id/select_post_image"
+        android:layout_width="wrap_content"
+        android:layout_height="300dp"
+        android:layout_below="@+id/update_post_page_toolbar"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="52dp"
+        android:layout_marginBottom="10dp"
+        android:scaleType="fitCenter"
+        app:srcCompat="@drawable/select_image" />
+
+    <EditText
+        android:id="@+id/post_description"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/select_post_image"
+        android:layout_margin="10dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/inputs"
+        android:ems="10"
+        android:gravity="start|top"
+        android:hint="write something about your post here..."
+        android:inputType="textMultiLine"
+        android:padding="5dp"
+        android:textColor="#1976D2" />
+
+    <Button
+        android:id="@+id/update_post_button"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/post_description"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/button"
+        android:padding="3dp"
+        android:text="update post" />
 
 
 </RelativeLayout>
