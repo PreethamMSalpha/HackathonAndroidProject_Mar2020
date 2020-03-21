@@ -5,6 +5,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -18,12 +19,21 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Locale;
 
 public class PostActivity extends AppCompatActivity {
 
@@ -36,21 +46,31 @@ public class PostActivity extends AppCompatActivity {
 
     private Uri ImageUri;
     private String Description;
+    private ProgressDialog loadingBar;
 
     private StorageReference PostsImagesRef;
+    private DatabaseReference UsersRef, PostRef;
+    private FirebaseAuth mAuth;
 
-    private String saveCurrentDate, saveCurrentTime, postRandomName;
+    private String saveCurrentDate, saveCurrentTime, postRandomName, DownloadUrl, currentUserId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_post);
 
+        mAuth = FirebaseAuth.getInstance();
+        currentUserId = mAuth.getCurrentUser().getUid();
+
         PostsImagesRef = FirebaseStorage.getInstance().getReference();
+        UsersRef = FirebaseDatabase.getInstance().getReference().child("Users");
+        PostRef = FirebaseDatabase.getInstance().getReference().child("Posts");
+
 
         SelectPostImage = (ImageButton)findViewById(R.id.select_post_image);
         UpdatePostButton = (Button) findViewById(R.id.update_post_button);
         PostDescription = (EditText) findViewById(R.id.post_description);
+        loadingBar = new ProgressDialog(this);
 
         mToolbar = (Toolbar) findViewById(R.id.update_post_page_toolbar);
         setSupportActionBar(mToolbar);
@@ -81,6 +101,11 @@ public class PostActivity extends AppCompatActivity {
         }else if (TextUtils.isEmpty(Description)){
             Toast.makeText(this, "Description about post is needed", Toast.LENGTH_SHORT).show();
         }else{
+            loadingBar.setTitle("Add new post");
+            loadingBar.setMessage("Please wait, while we're updating your new post...");
+            loadingBar.show();
+            loadingBar.setCanceledOnTouchOutside(true);
+
             StoringImageToFirebaseStorage();
         }
     }
@@ -90,9 +115,10 @@ public class PostActivity extends AppCompatActivity {
         SimpleDateFormat currentDate = new SimpleDateFormat("dd-MMMM-yyyy");
         saveCurrentDate = currentDate.format(calForDate.getTime());
 
-        Calendar calForTime = Calendar.getInstance();
-        SimpleDateFormat currentTime = new SimpleDateFormat("HH:mm");
-        saveCurrentTime = currentDate.format(calForTime.getTime());
+//        Calendar calForTime = Calendar.getInstance();
+//        SimpleDateFormat currentTime = new SimpleDateFormat("HH:mm");
+//        saveCurrentTime = currentTime.format(calForTime.getTime());
+          saveCurrentTime = new SimpleDateFormat("HH:mm", Locale.getDefault()).format(new Date());
 
         //same images with same names uploaded by the users wont be replaced
         postRandomName = saveCurrentDate + saveCurrentTime;
@@ -103,7 +129,10 @@ public class PostActivity extends AppCompatActivity {
             @Override
             public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
                 if (task.isSuccessful()){
+                    DownloadUrl = task.getResult().getMetadata().getReference().getDownloadUrl().toString();
                     Toast.makeText(PostActivity.this, "Image uploaded successfully to Storage", Toast.LENGTH_SHORT).show();
+
+                    SavingPostInformationToDatabase();
                 }else{
                     String message = task.getException().getMessage();
                     Toast.makeText(PostActivity.this, "Error occured: "+message, Toast.LENGTH_SHORT).show();
@@ -111,6 +140,47 @@ public class PostActivity extends AppCompatActivity {
             }
         });
     }
+
+    private void SavingPostInformationToDatabase() {
+        UsersRef.child(currentUserId).addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()){
+                    String userFullName = dataSnapshot.child("Fullname").getValue().toString();
+                    String userProfileImage = dataSnapshot.child("ProfileImages").getValue().toString();
+
+                    HashMap postMap = new HashMap();
+                    postMap.put("UId", currentUserId);
+                    postMap.put("Date", saveCurrentDate);
+                    postMap.put("Time", saveCurrentTime);
+                    postMap.put("Description", Description);
+                    postMap.put("PostImage", DownloadUrl);
+                    postMap.put("ProfileImage", userProfileImage);
+                    postMap.put("Fullname", userFullName);
+                    PostRef.child(currentUserId + postRandomName).updateChildren(postMap)
+                            .addOnCompleteListener(new OnCompleteListener() {
+                                @Override
+                                public void onComplete(@NonNull Task task) {
+                                    if (task.isSuccessful()){
+                                        loadingBar.dismiss();
+                                        SendUserToMainActivity();
+                                        Toast.makeText(PostActivity.this, "New post is updated successfully", Toast.LENGTH_SHORT).show();
+                                    }else{
+                                        Toast.makeText(PostActivity.this, "Error occured while uploading", Toast.LENGTH_SHORT).show();
+                                        loadingBar.dismiss();
+                                    }
+                                }
+                            });
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
 
     private void OpenGallery() {
         Intent galleryIntent = new Intent();
