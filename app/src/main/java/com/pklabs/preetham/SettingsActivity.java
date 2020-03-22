@@ -1,14 +1,21 @@
 package com.pklabs.preetham;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -16,6 +23,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.squareup.picasso.Picasso;
+
+import java.util.HashMap;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -86,5 +95,57 @@ public class SettingsActivity extends AppCompatActivity {
             }
         });
 
+        updateAccountSettingsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ValidateAccountInfo();
+            }
+        });
+
     }
+
+    private void ValidateAccountInfo() {
+        String username = userName.getText().toString();
+        String profilename = userProfName.getText().toString();
+        String status = userStatus.getText().toString();
+        String country = userCountry.getText().toString();
+        String gender = userGender.getText().toString();
+
+        if (TextUtils.isEmpty(username) && TextUtils.isEmpty(profilename) && TextUtils.isEmpty(status) && TextUtils.isEmpty(country) && TextUtils.isEmpty(gender)){
+            Toast.makeText(this, "All fields are mandatory", Toast.LENGTH_SHORT).show();
+        }else{
+            UpdateAccountInformation(username, profilename, status, country, gender);
+
+        }
+    }
+
+    private void UpdateAccountInformation(String username, String profilename, String status, String country, String gender) {
+
+        HashMap userMap = new HashMap();
+        userMap.put("userName", username);
+        userMap.put("fullName", profilename);
+        userMap.put("status", status);
+        userMap.put("country", country);
+        userMap.put("gender", gender);
+        settingsUserRef.updateChildren(userMap).addOnCompleteListener(new OnCompleteListener() {
+            @Override
+            public void onComplete(@NonNull Task task) {
+                if (task.isSuccessful()){
+                    SendUserToMainActivity();
+                    Toast.makeText(SettingsActivity.this, "Updated successfully!!!", Toast.LENGTH_SHORT).show();
+                }else{
+                    String message = task.getException().getMessage();
+                    Toast.makeText(SettingsActivity.this, "Error occured: " + message, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+    }
+
+    private void SendUserToMainActivity() {
+        Intent mainIntent = new Intent(SettingsActivity.this, MainActivity.class);
+        startActivity(mainIntent);
+        finish();
+    }
+
 }
