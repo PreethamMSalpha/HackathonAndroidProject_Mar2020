@@ -154,12 +154,6 @@ public class MainActivity extends AppCompatActivity {
                       Picasso.get().load(model.getProfileImage()).into(holder.image);
                       Picasso.get().load(model.getPostImage()).into(holder.PostImage);
 
-//                    holder.setFullName(model.getFullName());
-//                    holder.setTime(model.getTime());
-//                    holder.setDate(model.getDate());
-//                    holder.setDescription(model.getDescription());
-//                    holder.setProfileImage(getApplicationContext(), model.getProfileImage());
-//                    holder.setPostImage(getApplicationContext(), model.getPostImage());
             }
 
             @NonNull
@@ -193,35 +187,7 @@ public class MainActivity extends AppCompatActivity {
 
         }
 
-//        public void setFullName(String fullName){
-//            TextView username = itemView.findViewById(R.id.post_user_name);
-//            username.setText(fullName);
-//        }
-//
-//        public void setProfileImage(Context ctx, String profileImage){
-//            CircleImageView image =  itemView.findViewById(R.id.post_profile_image);
-//            Picasso.get().load(profileImage).into(image);
-//        }
-//
-//        public void setTime(String time){
-//            TextView PostTime = itemView.findViewById(R.id.post_time);
-//            PostTime.setText("   " + time);
-//        }
-//
-//        public void setDate(String date){
-//            TextView PostDate = itemView.findViewById(R.id.post_date);
-//            PostDate.setText("   " + date);
-//        }
-//
-//        public void setDescription(String description){
-//            TextView PostDescription = itemView.findViewById(R.id.post_description);
-//            PostDescription.setText("  "+description);
-//        }
-//
-//        public void setPostImage(Context ctx, String postImage){
-//            ImageView PostImage =  itemView.findViewById(R.id.post_image);
-//            Picasso.get().load(postImage).into(PostImage);
-//        }
+
 
     }
 
@@ -301,13 +267,19 @@ public class MainActivity extends AppCompatActivity {
             case R.id.nav_messages:
                 Toast.makeText(this, "messages", Toast.LENGTH_SHORT).show(); break;
             case R.id.nav_settings:
-                Toast.makeText(this, "settings", Toast.LENGTH_SHORT).show(); break;
+                SendUserToSettingsActivity(); break;
             case R.id.nav_logout:
                 mAuth.signOut();
                 SendUserToLoginActivity();
                 break;
 
         }
+    }
+
+    private void SendUserToSettingsActivity() {
+
+        Intent settingsIntent = new Intent(MainActivity.this, SettingsActivity.class);
+        startActivity(settingsIntent);
     }
 
 }

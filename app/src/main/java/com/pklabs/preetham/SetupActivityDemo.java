@@ -146,8 +146,8 @@ public class SetupActivityDemo extends AppCompatActivity {
             userMap.put("country", countryname);
             userMap.put("status", "hey there...");
             userMap.put("gender", "none");
-            userMap.put("DOB", "none");
-            userMap.put("relationshipStatus", "none");
+            //userMap.put("DOB", "none");
+            //userMap.put("relationshipStatus", "none");
             UsersRef.updateChildren(userMap);
 
             if (resultUri != null) {
