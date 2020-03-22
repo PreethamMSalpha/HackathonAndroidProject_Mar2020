@@ -103,7 +103,7 @@ public class SetupActivityDemo extends AppCompatActivity {
 
                     Glide.clear(ProfileImage);
                     if (map.get("profileImageUrl") != null){
-                        String profileImageUrl = map.get("ProfileImages").toString();
+                        String profileImageUrl = map.get("profileImage").toString();
                         switch (profileImageUrl){
                             case "default": Glide.with(getApplication()).load(R.drawable.profile).into(ProfileImage);  break;
                             default: Glide.with(getApplication()).load(profileImageUrl).into(ProfileImage); break;
@@ -141,13 +141,13 @@ public class SetupActivityDemo extends AppCompatActivity {
             loadingBar.setCanceledOnTouchOutside(true);
 
             HashMap userMap = new HashMap();
-            userMap.put("Username", username);
-            userMap.put("Fullname", fullname);
-            userMap.put("Country", countryname);
-            userMap.put("Status", "hey there...");
-            userMap.put("Gender", "none");
+            userMap.put("userName", username);
+            userMap.put("fullName", fullname);
+            userMap.put("country", countryname);
+            userMap.put("status", "hey there...");
+            userMap.put("gender", "none");
             userMap.put("DOB", "none");
-            userMap.put("RelationshipStatus", "none");
+            userMap.put("relationshipStatus", "none");
             UsersRef.updateChildren(userMap);
 
             if (resultUri != null) {
@@ -183,7 +183,7 @@ public class SetupActivityDemo extends AppCompatActivity {
                                 loadingBar.dismiss();
 
                                 Map userInfo = new HashMap();
-                                userInfo.put("ProfileImages", uri.toString());
+                                userInfo.put("profileImage", uri.toString());
                                 UsersRef.updateChildren(userInfo);
                                 SendUserToMainActivity();
                                 finish();
