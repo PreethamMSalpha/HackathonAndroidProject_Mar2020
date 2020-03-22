@@ -25,7 +25,7 @@
         app:srcCompat="@drawable/select_image" />
 
     <EditText
-        android:id="@+id/post_description"
+        android:id="@+id/personal_post_description"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/select_post_image"
@@ -38,17 +38,40 @@
         android:inputType="textMultiLine"
         android:padding="5dp"
         android:textColor="#1976D2" />
+    <EditText
+        android:id="@+id/due_date"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/personal_post_description"
+        android:layout_margin="10dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/inputs"
+        android:hint="Due date...."
+        android:inputType="datetime"
+        android:padding="5dp"
+        android:textColor="#1976D2"/>
 
     <Button
-        android:id="@+id/update_post_button"
+        android:id="@+id/post_team_button"
         android:layout_width="200dp"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/post_description"
+        android:layout_below="@+id/due_date"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="13dp"
         android:background="@drawable/button"
         android:padding="3dp"
-        android:text="update post" />
+        android:text="update to team board" />
+
+    <Button
+        android:id="@+id/post_personal_button"
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/post_team_button"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="13dp"
+        android:background="@drawable/button"
+        android:padding="3dp"
+        android:text="update to personal board" />
 
 
 </RelativeLayout>

@@ -3,10 +3,10 @@ package com.pklabs.preetham;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.appcompat.widget.Toolbar;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -18,7 +18,6 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
@@ -34,7 +33,7 @@ import com.squareup.picasso.Picasso;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
-public class MainActivity extends AppCompatActivity {
+public class PersonalActivity extends AppCompatActivity {
 
     private NavigationView navigationView;
     private DrawerLayout drawerLayout;
@@ -47,27 +46,27 @@ public class MainActivity extends AppCompatActivity {
     private ImageButton AddNewPostButton;
 
     private FirebaseAuth mAuth;
-    private DatabaseReference UsersRef, PostsRef;
+    private DatabaseReference UsersRef, PersonalRef;
 
     String currentUserId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_personal);
 
         mAuth = FirebaseAuth.getInstance();
         currentUserId = mAuth.getCurrentUser().getUid();
         UsersRef = FirebaseDatabase.getInstance().getReference().child("Users");
-        PostsRef = FirebaseDatabase.getInstance().getReference().child("Posts");
+        PersonalRef = FirebaseDatabase.getInstance().getReference().child("Personal").child(currentUserId);
 
         mToolbar = (Toolbar) findViewById(R.id.main_app_toolbar);
         setSupportActionBar(mToolbar);
-        getSupportActionBar().setTitle("Home");
+        getSupportActionBar().setTitle("Personal Board");
 
         AddNewPostButton = (ImageButton)findViewById(R.id.add_new_post_button);
         drawerLayout = (DrawerLayout)findViewById(R.id.drawable_layout);
-        actionBarDrawerToggle = new ActionBarDrawerToggle(MainActivity.this, drawerLayout, R.string.drawer_open,R.string.drawer_close);
+        actionBarDrawerToggle = new ActionBarDrawerToggle(PersonalActivity.this, drawerLayout, R.string.drawer_open,R.string.drawer_close);
         drawerLayout.addDrawerListener(actionBarDrawerToggle);
         actionBarDrawerToggle.syncState();
         //actionBarDrawerToggle.setDisplayHomeAsUpEnabled(true);
@@ -86,6 +85,7 @@ public class MainActivity extends AppCompatActivity {
         NavProfileImage = (CircleImageView) navView.findViewById(R.id.nav_profile_image);
         NavProfileUserName = (TextView) navView.findViewById(R.id.nav_user_full_name);
 
+        //for navigation bar info update
         UsersRef.child(currentUserId).addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -98,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
                         String image = dataSnapshot.child(("profileImage")).getValue().toString();
                         Picasso.get().load(image).placeholder(R.drawable.profile).into(NavProfileImage);
                     }else{
-                        Toast.makeText(MainActivity.this, "Profile name doesn't exsist", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(PersonalActivity.this, "Profile name doesn't exsist", Toast.LENGTH_SHORT).show();
                     }
 
                 }
@@ -125,38 +125,38 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        DisplayAllUserSPosts();
+        DisplayPersonalPosts();
 
     }
 
-    private void DisplayAllUserSPosts() {
+    private void DisplayPersonalPosts() {
 
         FirebaseRecyclerOptions<Posts> options =
                 new FirebaseRecyclerOptions.Builder<Posts>()
-                    .setQuery(PostsRef, Posts.class)
-                    .build();
+                        .setQuery(PersonalRef, Posts.class)
+                        .build();
 
-        FirebaseRecyclerAdapter<Posts, PostsVieHolder> firebaseRecyclerAdapter
-                = new FirebaseRecyclerAdapter<Posts, PostsVieHolder>(options)
+        FirebaseRecyclerAdapter<Posts, PersonalActivity.PostsVieHolder> firebaseRecyclerAdapter
+                = new FirebaseRecyclerAdapter<Posts, PersonalActivity.PostsVieHolder>(options)
         {
             @Override
-            protected void onBindViewHolder(@NonNull PostsVieHolder holder, int position, @NonNull Posts model) {
+            protected void onBindViewHolder(@NonNull PersonalActivity.PostsVieHolder holder, int position, @NonNull Posts model) {
 
-                      holder.username.setText(model.getFullName());
-                      holder.PostTime.setText("   " + model.getTime());
-                      holder.PostDate.setText("   " +model.getDate());
-                      holder.PostDueDate.setText("   "+model.getDueDate());
-                      holder.PostDescription.setText(model.description);
-                      Picasso.get().load(model.getProfileImage()).into(holder.image);
-                      Picasso.get().load(model.getPostImage()).into(holder.PostImage);
+                holder.username.setText(model.getFullName());
+                holder.PostTime.setText("   " + model.getTime());
+                holder.PostDate.setText("   " +model.getDate());
+                holder.PostDueDate.setText("   "+model.getDueDate());
+                holder.PostDescription.setText(model.description);
+                Picasso.get().load(model.getProfileImage()).into(holder.image);
+                Picasso.get().load(model.getPostImage()).into(holder.PostImage);
 
             }
 
             @NonNull
             @Override
-            public PostsVieHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-                View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.all_posts_layout, parent, false);
-                PostsVieHolder viewHolder = new PostsVieHolder(view);
+            public PersonalActivity.PostsVieHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+                View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.all_posts_personal_layout, parent, false);
+                PersonalActivity.PostsVieHolder viewHolder = new PersonalActivity.PostsVieHolder(view);
                 return viewHolder;
             }
         };
@@ -164,7 +164,7 @@ public class MainActivity extends AppCompatActivity {
         postList.setAdapter(firebaseRecyclerAdapter);
         firebaseRecyclerAdapter.startListening();
 
-   }
+    }
 
     public static class PostsVieHolder extends RecyclerView.ViewHolder{
         TextView username, PostDescription, PostTime, PostDate, PostDueDate;
@@ -189,53 +189,53 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void SendUserToPostActivity() {
-        Intent addNewPostIntent = new Intent(MainActivity.this, PostActivity.class);
+        Intent addNewPostIntent = new Intent(PersonalActivity.this, PostActivity.class);
         startActivity(addNewPostIntent);
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-        if (currentUser == null){
-            SendUserToLoginActivity();
-        }else{
-            CheckUserExistence();
-        }
-        DisplayAllUserSPosts();
+//    @Override
+//    protected void onStart() {
+//        super.onStart();
+//        FirebaseUser currentUser = mAuth.getCurrentUser();
+//        if (currentUser == null){
+//            SendUserToLoginActivity();
+//        }else{
+//            CheckUserExistence();
+//        }
+//        DisplayPersonalPosts();
+//
+//    }
 
-    }
+//    private void CheckUserExistence() {
+//        final String currentUserId = mAuth.getCurrentUser().getUid();
+//        UsersRef.addValueEventListener(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                if (!dataSnapshot.hasChild(currentUserId)){
+//                    SendUserToSetupActivity();
+//                }else{
+//                    DisplayPersonalPosts();
+//                }
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError databaseError) {
+//
+//            }
+//        }) ;
+//
+//    }
 
-    private void CheckUserExistence() {
-        final String currentUserId = mAuth.getCurrentUser().getUid();
-        UsersRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if (!dataSnapshot.hasChild(currentUserId)){
-                    SendUserToSetupActivity();
-                }else{
-                    DisplayAllUserSPosts();
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        }) ;
-
-    }
-
-    private void SendUserToSetupActivity() {
-        Intent setupIntent = new Intent(MainActivity.this, SetupActivityDemo.class);
-        setupIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(setupIntent);
-        finish();
-    }
-
+//    private void SendUserToSetupActivity() {
+//        Intent setupIntent = new Intent(PersonalActivity.this, SetupActivityDemo.class);
+//        setupIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+//        startActivity(setupIntent);
+//        finish();
+//    }
+//
     private void SendUserToLoginActivity() {
 
-        Intent loginIntent = new Intent(MainActivity.this, LoginActivity.class);
+        Intent loginIntent = new Intent(PersonalActivity.this, LoginActivity.class);
         loginIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(loginIntent);
         finish();
@@ -254,7 +254,9 @@ public class MainActivity extends AppCompatActivity {
             case R.id.nav_post:
                 SendUserToPostActivity(); break;
             case R.id.nav_personalBoardPosts:
-                SendUserToPersonalActivity(); break;
+                SendUserToPersonalActivity();
+                Toast.makeText(this, "Personal Posts", Toast.LENGTH_SHORT).show();
+                break;
             case R.id.nav_teamBoardPosts:
                 SendUserToMainActivity(); break;
             case R.id.nav_settings:
@@ -268,19 +270,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void SendUserToPersonalActivity() {
-        Intent selfIntent = new Intent(MainActivity.this, PersonalActivity.class);
+        Intent selfIntent = new Intent(PersonalActivity.this, PersonalActivity.class);
         startActivity(selfIntent);
     }
 
     private void SendUserToMainActivity() {
-        Intent selfIntent = new Intent(MainActivity.this, MainActivity.class);
+        Intent selfIntent = new Intent(PersonalActivity.this, MainActivity.class);
         startActivity(selfIntent);
     }
 
     private void SendUserToSettingsActivity() {
 
-        Intent settingsIntent = new Intent(MainActivity.this, SettingsActivity.class);
+        Intent settingsIntent = new Intent(PersonalActivity.this, SettingsActivity.class);
         startActivity(settingsIntent);
     }
+
+
 
 }

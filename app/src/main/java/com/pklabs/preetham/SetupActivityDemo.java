@@ -137,8 +137,9 @@ public class SetupActivityDemo extends AppCompatActivity {
         }else {
             loadingBar.setTitle("Saving Information...");
             loadingBar.setMessage("Please wait, while we're saving information...");
-            loadingBar.show();
             loadingBar.setCanceledOnTouchOutside(true);
+            loadingBar.show();
+
 
             HashMap userMap = new HashMap();
             userMap.put("userName", username);
