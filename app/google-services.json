@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "214028301801",
+    "firebase_url": "https://hackathon-adfca.firebaseio.com",
+    "project_id": "hackathon-adfca",
+    "storage_bucket": "hackathon-adfca.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:214028301801:android:3c01ccb2c0793112398778",
+        "android_client_info": {
+          "package_name": "com.pklabs.preetham"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "214028301801-pavjak7ksrgak2193i37pgjugea9qhhc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBxg87qownb_CFbH79dYg2XT8oBOnwNBzI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "214028301801-pavjak7ksrgak2193i37pgjugea9qhhc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
