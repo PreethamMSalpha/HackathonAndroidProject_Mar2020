@@ -75,7 +75,7 @@ public class PostActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         currentUserId = mAuth.getCurrentUser().getUid();
 
-        PostsImagesRef = FirebaseStorage.getInstance().getReference();
+        PostsImagesRef = FirebaseStorage.getInstance().getReference().child("Post Images");
         UsersRef = FirebaseDatabase.getInstance().getReference().child("Users");
         PostRef = FirebaseDatabase.getInstance().getReference().child("Posts");
         PersonalRef = FirebaseDatabase.getInstance().getReference().child("Personal").child(currentUserId);
@@ -235,7 +235,7 @@ public class PostActivity extends AppCompatActivity {
                                 @Override
                                 public void onComplete(@NonNull Task task) {
                                     if(task.isSuccessful()){
-                                        SendUserToMainActivity();
+                                        SendUserToPersonalActivity();
                                         Toast.makeText(PostActivity.this,"Uploaded Post!",Toast.LENGTH_SHORT).show();
                                         loadingBar.dismiss();
                                     }
@@ -254,6 +254,11 @@ public class PostActivity extends AppCompatActivity {
         });
     }
 
+    private void SendUserToPersonalActivity() {
+        Intent personalIntent = new Intent(PostActivity.this, PersonalActivity.class);
+        startActivity(personalIntent);
+    }
+
     private void showDateTimeDialog(final EditText PostDueDate) {
         final Calendar calendar=Calendar.getInstance();
         DatePickerDialog.OnDateSetListener dateSetListener=new DatePickerDialog.OnDateSetListener() {
@@ -269,7 +274,7 @@ public class PostActivity extends AppCompatActivity {
                         calendar.set(Calendar.HOUR_OF_DAY,hourOfDay);
                         calendar.set(Calendar.MINUTE,minute);
 
-                        SimpleDateFormat simpleDateFormat=new SimpleDateFormat("yy-MM-dd HH:mm");
+                        SimpleDateFormat simpleDateFormat=new SimpleDateFormat("dd-MM-yy HH:mm");
 
                         PostDueDate.setText(simpleDateFormat.format(calendar.getTime()));
                     }
@@ -287,9 +292,11 @@ public class PostActivity extends AppCompatActivity {
         dueDate = PostDueDate.getText().toString();
         if (TextUtils.isEmpty(description)){
             Toast.makeText(this, "Description about post is needed", Toast.LENGTH_SHORT).show();
-        }else if (TextUtils.isEmpty(dueDate)) {
-            Toast.makeText(this, "Due date of post is needed", Toast.LENGTH_SHORT).show();
-        }else if (ImageUri == null){
+        }
+//        else if (TextUtils.isEmpty(dueDate)) {
+//            Toast.makeText(this, "Due date of post is needed", Toast.LENGTH_SHORT).show();
+//        }
+        else if (ImageUri == null){
             showAlert();
             Toast.makeText(this, "Image not selected", Toast.LENGTH_SHORT).show();
 

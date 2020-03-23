@@ -34,7 +34,7 @@
         android:background="@drawable/inputs"
         android:ems="10"
         android:gravity="start|top"
-        android:hint="write something about your post here..."
+        android:hint="write description about your post here..."
         android:inputType="textMultiLine"
         android:padding="5dp"
         android:textColor="#1976D2" />

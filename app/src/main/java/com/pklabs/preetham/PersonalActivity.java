@@ -10,10 +10,12 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -46,9 +48,11 @@ public class PersonalActivity extends AppCompatActivity {
     private ImageButton AddNewPostButton;
 
     private FirebaseAuth mAuth;
-    private DatabaseReference UsersRef, PersonalRef;
+    private DatabaseReference UsersRef, PersonalRef, LikesRef;
 
     String currentUserId;
+    Boolean LikeChecker;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +63,7 @@ public class PersonalActivity extends AppCompatActivity {
         currentUserId = mAuth.getCurrentUser().getUid();
         UsersRef = FirebaseDatabase.getInstance().getReference().child("Users");
         PersonalRef = FirebaseDatabase.getInstance().getReference().child("Personal").child(currentUserId);
+        LikesRef = FirebaseDatabase.getInstance().getReference().child("Likes").child(currentUserId);
 
         mToolbar = (Toolbar) findViewById(R.id.main_app_toolbar);
         setSupportActionBar(mToolbar);
@@ -140,15 +145,53 @@ public class PersonalActivity extends AppCompatActivity {
                 = new FirebaseRecyclerAdapter<Posts, PersonalActivity.PostsVieHolder>(options)
         {
             @Override
-            protected void onBindViewHolder(@NonNull PersonalActivity.PostsVieHolder holder, int position, @NonNull Posts model) {
+            protected void onBindViewHolder(@NonNull final PersonalActivity.PostsVieHolder holder, int position, @NonNull Posts model) {
+
+                final String PostKey = getRef(position).getKey();
 
                 holder.username.setText(model.getFullName());
                 holder.PostTime.setText("   " + model.getTime());
                 holder.PostDate.setText("   " +model.getDate());
                 holder.PostDueDate.setText("   "+model.getDueDate());
                 holder.PostDescription.setText(model.description);
+
+                holder.setLikeButtonStatus(PostKey);
+
                 Picasso.get().load(model.getProfileImage()).into(holder.image);
                 Picasso.get().load(model.getPostImage()).into(holder.PostImage);
+
+                holder.LikePostButton.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        LikeChecker = true;
+                        Log.i("checkbox:", "clicked");
+
+                        LikesRef.addValueEventListener(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+
+                                if (LikeChecker.equals(true)){
+
+                                    if (dataSnapshot.child(PostKey).hasChild(currentUserId)){
+                                        LikesRef.child(PostKey).child(currentUserId).removeValue();
+                                        LikeChecker = false;
+
+                                    }else{
+                                        LikesRef.child(PostKey).child(currentUserId).setValue(true);
+                                        LikeChecker = false;
+                                    }
+
+                                }
+                            }
+
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+
+                            }
+                        });
+                    }
+                });
 
             }
 
@@ -171,6 +214,13 @@ public class PersonalActivity extends AppCompatActivity {
         CircleImageView image;
         ImageView PostImage;
 
+        ImageButton LikePostButton;
+        TextView DisplayNoOfLikes;
+
+        int countLikes;
+        String currentUserId;
+        DatabaseReference LikesRef;
+
         public PostsVieHolder(@NonNull View itemView) {
             super(itemView);
 
@@ -181,11 +231,38 @@ public class PersonalActivity extends AppCompatActivity {
             PostDate = itemView.findViewById(R.id.personal_post_date);
             PostDueDate = itemView.findViewById(R.id.personal_post_dueDate);
             PostImage =  itemView.findViewById(R.id.personal_post_image);
+            DisplayNoOfLikes = itemView.findViewById(R.id.display_no_of_likes);
+            LikePostButton = itemView.findViewById(R.id.like_button);
+
+            currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            LikesRef = FirebaseDatabase.getInstance().getReference().child("Likes").child(currentUserId);
+
 
         }
 
+        public void setLikeButtonStatus(final String PostKey){
+            LikesRef.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.child(PostKey).hasChild(currentUserId)){
 
+                        countLikes = (int) dataSnapshot.child(PostKey).getChildrenCount();
+                        LikePostButton.setImageResource(R.drawable.tick);
+                        DisplayNoOfLikes.setText(" Checked");
 
+                    }else{
+                        countLikes = (int) dataSnapshot.child(PostKey).getChildrenCount();
+                        LikePostButton.setImageResource(R.drawable.untick);
+                        DisplayNoOfLikes.setText(" Unchecked");
+                    }
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+        }
     }
 
     private void SendUserToPostActivity() {
@@ -193,46 +270,7 @@ public class PersonalActivity extends AppCompatActivity {
         startActivity(addNewPostIntent);
     }
 
-//    @Override
-//    protected void onStart() {
-//        super.onStart();
-//        FirebaseUser currentUser = mAuth.getCurrentUser();
-//        if (currentUser == null){
-//            SendUserToLoginActivity();
-//        }else{
-//            CheckUserExistence();
-//        }
-//        DisplayPersonalPosts();
-//
-//    }
 
-//    private void CheckUserExistence() {
-//        final String currentUserId = mAuth.getCurrentUser().getUid();
-//        UsersRef.addValueEventListener(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-//                if (!dataSnapshot.hasChild(currentUserId)){
-//                    SendUserToSetupActivity();
-//                }else{
-//                    DisplayPersonalPosts();
-//                }
-//            }
-//
-//            @Override
-//            public void onCancelled(@NonNull DatabaseError databaseError) {
-//
-//            }
-//        }) ;
-//
-//    }
-
-//    private void SendUserToSetupActivity() {
-//        Intent setupIntent = new Intent(PersonalActivity.this, SetupActivityDemo.class);
-//        setupIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-//        startActivity(setupIntent);
-//        finish();
-//    }
-//
     private void SendUserToLoginActivity() {
 
         Intent loginIntent = new Intent(PersonalActivity.this, LoginActivity.class);

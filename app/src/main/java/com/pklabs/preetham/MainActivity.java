@@ -4,16 +4,19 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.appcompat.widget.Toolbar;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -47,9 +50,10 @@ public class MainActivity extends AppCompatActivity {
     private ImageButton AddNewPostButton;
 
     private FirebaseAuth mAuth;
-    private DatabaseReference UsersRef, PostsRef;
+    private DatabaseReference UsersRef, PostsRef, LikesRef;
 
     String currentUserId;
+    Boolean LikeChecker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
         currentUserId = mAuth.getCurrentUser().getUid();
         UsersRef = FirebaseDatabase.getInstance().getReference().child("Users");
         PostsRef = FirebaseDatabase.getInstance().getReference().child("Posts");
+        LikesRef = FirebaseDatabase.getInstance().getReference().child("Likes");
 
         mToolbar = (Toolbar) findViewById(R.id.main_app_toolbar);
         setSupportActionBar(mToolbar);
@@ -142,13 +147,51 @@ public class MainActivity extends AppCompatActivity {
             @Override
             protected void onBindViewHolder(@NonNull PostsVieHolder holder, int position, @NonNull Posts model) {
 
+                     final String PostKey = getRef(position).getKey();
+
                       holder.username.setText(model.getFullName());
                       holder.PostTime.setText("   " + model.getTime());
                       holder.PostDate.setText("   " +model.getDate());
                       holder.PostDueDate.setText("   "+model.getDueDate());
                       holder.PostDescription.setText(model.description);
+
+                      holder.setLikeButtonStatus(PostKey);
+
                       Picasso.get().load(model.getProfileImage()).into(holder.image);
                       Picasso.get().load(model.getPostImage()).into(holder.PostImage);
+
+                      holder.LikePostButton.setOnClickListener(new View.OnClickListener() {
+                          @Override
+                          public void onClick(View v) {
+                                LikeChecker = true;
+                              Log.i("checkbox:", "clicked");
+
+                                LikesRef.addValueEventListener(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(DataSnapshot dataSnapshot) {
+
+                                            if (LikeChecker.equals(true)){
+
+                                                if (dataSnapshot.child(PostKey).hasChild(currentUserId)){
+                                                    LikesRef.child(PostKey).child(currentUserId).removeValue();
+                                                    LikeChecker = false;
+
+                                                }else{
+                                                    LikesRef.child(PostKey).child(currentUserId).setValue(true);
+                                                    LikeChecker = false;
+                                                }
+
+                                            }
+                                        }
+
+
+                                    @Override
+                                    public void onCancelled(DatabaseError databaseError) {
+
+                                    }
+                                });
+                          }
+                      });
 
             }
 
@@ -161,6 +204,7 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
+        //new ItemTouchHelper(itemTouchHelperCallBack).attachToRecyclerView(fi);
         postList.setAdapter(firebaseRecyclerAdapter);
         firebaseRecyclerAdapter.startListening();
 
@@ -170,6 +214,13 @@ public class MainActivity extends AppCompatActivity {
         TextView username, PostDescription, PostTime, PostDate, PostDueDate;
         CircleImageView image;
         ImageView PostImage;
+
+        ImageButton LikePostButton;
+        TextView DisplayNoOfLikes;
+
+        int countLikes;
+        String currentUserId;
+        DatabaseReference LikesRef;
 
         public PostsVieHolder(@NonNull View itemView) {
             super(itemView);
@@ -181,9 +232,39 @@ public class MainActivity extends AppCompatActivity {
             PostDate = itemView.findViewById(R.id.personal_post_date);
             PostDueDate = itemView.findViewById(R.id.personal_post_dueDate);
             PostImage =  itemView.findViewById(R.id.personal_post_image);
+            DisplayNoOfLikes = itemView.findViewById(R.id.display_no_of_likes);
+            LikePostButton = itemView.findViewById(R.id.like_button);
+
+
+
+            currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+            LikesRef = FirebaseDatabase.getInstance().getReference().child("Likes");
 
         }
 
+        public void setLikeButtonStatus(final String PostKey){
+            LikesRef.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    if (dataSnapshot.child(PostKey).hasChild(currentUserId)){
+
+                        countLikes = (int) dataSnapshot.child(PostKey).getChildrenCount();
+                        LikePostButton.setImageResource(R.drawable.tick);
+                        DisplayNoOfLikes.setText("Total Checks : " + Integer.toString(countLikes));
+
+                    }else{
+                        countLikes = (int) dataSnapshot.child(PostKey).getChildrenCount();
+                        LikePostButton.setImageResource(R.drawable.untick);
+                        DisplayNoOfLikes.setText("Total Checks : " + Integer.toString(countLikes));
+                    }
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+        }
 
 
     }
@@ -282,5 +363,17 @@ public class MainActivity extends AppCompatActivity {
         Intent settingsIntent = new Intent(MainActivity.this, SettingsActivity.class);
         startActivity(settingsIntent);
     }
+
+    ItemTouchHelper.SimpleCallback itemTouchHelperCallBack = new ItemTouchHelper.SimpleCallback(0,ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+        @Override
+        public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+            return false;
+        }
+
+        @Override
+        public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+
+        }
+    };
 
 }

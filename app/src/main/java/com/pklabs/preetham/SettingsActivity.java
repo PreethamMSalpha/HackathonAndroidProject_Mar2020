@@ -81,7 +81,6 @@ public class SettingsActivity extends AppCompatActivity {
 
         userName = (EditText)findViewById(R.id.settings_username);
         userProfName = (EditText)findViewById(R.id.settings_profile_fullname);
-        userStatus = (EditText)findViewById(R.id.settings_status);
         userCountry = (EditText)findViewById(R.id.settings_country);
         userGender = (EditText)findViewById(R.id.settings_gender);
 

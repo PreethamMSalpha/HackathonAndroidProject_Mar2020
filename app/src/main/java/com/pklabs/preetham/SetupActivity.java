@@ -179,36 +179,6 @@ public class SetupActivity extends AppCompatActivity {
     }
 
 
-//                filepath.putFile(resultUri).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
-//                    @Override
-//                    public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
-//                       if (task.isSuccessful()){
-//                           Toast.makeText(SetupActivity.this, "Profile Image stored to Database successfully", Toast.LENGTH_SHORT).show();
-//                            //final String downloadUrl = task.getResult().getTask().toString(); //error might occur here 18.56_14
-//                           final String downloadUrl = task.getResult().getMetadata().getReference().getDownloadUrl().toString();
-//
-//                           UsersRef.child("ProfileImages").setValue(downloadUrl)
-//                                   .addOnCompleteListener(new OnCompleteListener<Void>() {
-//                                       @Override
-//                                       public void onComplete(@NonNull Task<Void> task) {
-//                                           if (task.isSuccessful()){
-//                                               Intent selfIntent = new Intent(SetupActivity.this, SetupActivity.class);
-//                                               startActivity(selfIntent);
-//
-//                                               Toast.makeText(SetupActivity.this, "Profile image stored to Database successfully!!!", Toast.LENGTH_SHORT).show();
-//                                               loadingBar.dismiss();
-//                                           }else{
-//                                               String message = task.getException().getMessage();
-//                                               Toast.makeText(SetupActivity.this, "Error occured "+message, Toast.LENGTH_SHORT).show();
-//                                               loadingBar.dismiss();
-//                                           }
-//                                       }
-//                                   });
-//                       }
-//                    }
-//                });
-//
-
     private void SaveAccountSetupInfo() {
         String username = UserName.getText().toString();
         String fullname = FullName.getText().toString();

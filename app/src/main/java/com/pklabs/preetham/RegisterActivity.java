@@ -10,6 +10,7 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -21,6 +22,7 @@ import com.google.firebase.auth.FirebaseUser;
 public class RegisterActivity extends AppCompatActivity {
 
     private EditText UserEmail, UserPassword, UserConfirmPassword;
+    private TextView LoginLink;
     private Button CreateAccountButton;
     private FirebaseAuth mAuth;
     private ProgressDialog loadingBar;
@@ -35,8 +37,16 @@ public class RegisterActivity extends AppCompatActivity {
         UserEmail = (EditText) findViewById(R.id.register_email);
         UserPassword = (EditText) findViewById(R.id.register_password);
         UserConfirmPassword = (EditText) findViewById(R.id.register_confirm_password);
+        LoginLink = (TextView) findViewById(R.id.login_account_link);
         CreateAccountButton = (Button) findViewById(R.id.register_create_account);
         loadingBar = new ProgressDialog(this);
+
+        LoginLink.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SendUserToLoginActivity();
+            }
+        });
 
         CreateAccountButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -45,6 +55,12 @@ public class RegisterActivity extends AppCompatActivity {
             }
         });
     }
+
+    private void SendUserToLoginActivity() {
+        Intent loginIntent = new Intent(RegisterActivity.this, LoginActivity.class);
+        startActivity(loginIntent);
+    }
+
 
     @Override
     protected void onStart() {
